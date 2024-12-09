@@ -1,0 +1,34 @@
+---
+- name: Create prometheus group
+  ansible.builtin.group:
+    name: prometheus
+    system: true
+    state: present
+
+- name: Create prometheus user
+  ansible.builtin.user:
+    name: prometheus
+    system: true
+    shell: "/sbin/nologin"
+    group: prometheus
+    create_home: false
+
+- name: Create prometheus data directory
+  ansible.builtin.file:
+    path: "{{ prometheus_data_dir }}"
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: 0755
+
+- name: Create prometheus configuration directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: 0770
+  with_items:
+    - "{{ prometheus_config_dir }}"
+    - "{{ prometheus_config_dir }}/rules"
+
