@@ -1,38 +1,66 @@
-Install Prometheus
-=========
+# Ansible Роль: Установка Prometheus
 
-A brief description of the role goes here.
+## Описание
+Эта Ansible-роль устанавливает и настраивает Prometheus на целевых серверах. При наличии Consul используется соответствующий шаблон конфигурации Prometheus.
 
-Requirements
-------------
+## Требования
+Для использования этой роли необходимо установить её через Ansible Galaxy:
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+```bash
+ansible-galaxy install -p roles -r roles/requirements.yml
+```
 
-Role Variables
---------------
+Файл `roles/requirements.yml` должен содержать:
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+```yaml
+- src: https://github.com/filatof/prometheus-ansible-role.git
+  name: prometheus
+  scm: git
+  version: main
+```
 
-Dependencies
-------------
+## Переменные роли
+Роль поддерживает следующие переменные, которые можно настроить:
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+- `prometheus_version`: "3.0.1" – версия Prometheus.
+- `prometheus_force_install`: `false` – принудительная переустановка Prometheus.
+- `prometheus_config_dir`: `/etc/prometheus` – каталог конфигурации Prometheus.
+- `prometheus_data_dir`: `/var/lib/prometheus` – каталог данных Prometheus.
+- `prometheus_web_listen_address`: `"0.0.0.0:9090"` – адрес и порт, на котором работает Prometheus.
+- `prometheus_web_external_url`: `""` – внешний URL Prometheus.
+- `prometheus_storage_retention`: `"30d"` – срок хранения метрик.
+- `prometheus_storage_retention_size`: `"0"` – лимит хранения данных (0 – без ограничения).
+- `prometheus_config_flags_extra`: `{}` – дополнительные флаги конфигурации.
+- `prometheus_alertmanager_config`: `[]` – настройки интеграции с Alertmanager.
 
-Example Playbook
-----------------
+## Логика установки
+### Конфигурация Prometheus:
+- Если на целевой машине установлен Consul, используется шаблон конфигурации с autodiscovery через Consul.
+- Если Consul отсутствует, применяется стандартный шаблон конфигурации с определёнными метками и настройками алертинга.
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+### Основные задачи:
+- Создание systemd unit-файла для Prometheus.
+- Добавление alerting-правил через шаблоны Ansible.
+- Копирование пользовательских файлов правил алертинга.
+- Добавление основного конфигурационного файла `prometheus.yml` с валидацией через `promtool`.
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+## Пример использования
+Пример использования роли в playbook:
 
-License
--------
+```yaml
+- hosts: all
+  become: yes
+  roles:
+    - role: prometheus
+      prometheus_version: "3.0.1"
+      prometheus_web_listen_address: "0.0.0.0:9090"
+      prometheus_storage_retention: "15d"
+```
 
+## Лицензия
 BSD
 
-Author Information
-------------------
+## Автор
+Разработчик: filatof EQ
+Репозиторий: [GitHub](https://github.com/filatof/prometheus-ansible-role)
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
